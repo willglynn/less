@@ -44,6 +44,11 @@ opts = OptionParser.new do |o|
     end
   end
   
+  # URL mtime addition
+  o.on("-m", "--mtime-append", "append mtime for file URLs found relative to the CWD") do
+    options[:mtime_append] = true
+  end
+  
   # Compression needs a proper algorithm
   #
   #  o.on("-x", "--compress", "compress css file") do

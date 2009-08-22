@@ -15,6 +15,17 @@ module Less
       @source = options[:source]
       @destination = (options[:destination] || options[:source]).gsub /\.(less|lss)/, '.css'
       @options = options
+      
+      if options[:mtime_append]
+        @options[:url_transforms] = [
+          Proc.new { |url|
+            if (url =~ /^\/?([^?]+)$/) && (File.exists?($1) rescue nil) && ((mtime = File.mtime($1).to_i) rescue nil)
+              url.concat("?#{mtime}")
+            else
+              true
+            end
+          }]
+      end
     end
 
     def watch?()    @options[:watch]    end
@@ -61,7 +72,7 @@ module Less
     def parse new = false
       begin
         # Create a new Less object with the contents of a file
-        css = Less::Engine.new(File.new(@source)).to_css
+        css = Less::Engine.new(File.new(@source), options).to_css
         css = css.delete " \n" if compress?
 
         File.open( @destination, "w" ) do |file|

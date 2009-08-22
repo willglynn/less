@@ -294,7 +294,7 @@ module Less
     rule function
       name:([-a-zA-Z_]+) arguments {
         def build
-          Node::Function.new(name.text_value, [arguments.build].flatten)
+          Node::Function.new(@input.respond_to?(:less_engine) && @input.less_engine, name.text_value, [arguments.build].flatten)
         end
       }
     end

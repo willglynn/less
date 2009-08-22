@@ -37,6 +37,19 @@ module Less
       rgba hue[ h + 1/3 ], hue[ h ], hue[ h - 1/3 ], a
     end
     
+    #
+    # URL function
+    #
+    def url string
+      # Call any registered transformation hooks, passing in the mutable URL contents
+      # If they return false, stop
+      (@engine && @engine.options[:url_transforms] || []).each { |function|
+        rv = function.call(string.content)
+        break if rv == false
+      }
+      Node::String.new("url(#{string.to_css})")
+    end
+        
     def self.available
       self.instance_methods.map(&:to_sym)
     end
@@ -52,7 +65,8 @@ module Less
       include Entity
       include Functions
     
-      def initialize name, *args
+      def initialize engine, name, *args
+        @engine = engine
         @args = args.flatten
         super name
       end
@@ -64,8 +78,7 @@ module Less
       #
       # Call the function
       #
-      # If the function isn't found, we just print it out,
-      # this is the case for url(), for example,
+      # If the function isn't found, we just print it out
       #
       def evaluate context = nil
         if Functions.available.include? self.to_sym

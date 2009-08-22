@@ -14,7 +14,7 @@ module Less
   class Engine
     attr_reader :css, :less
     
-    def initialize obj
+    def initialize obj, options = {}
       @less = if obj.is_a? File
         @path = File.dirname File.expand_path(obj.path)
         obj.read
@@ -25,10 +25,16 @@ module Less
       end
       
       @parser = StyleSheetParser.new
+      @options = options
+      
+      # Make the parser input respond_to :less_engine, returning us
+      @less.instance_variable_set(:@less_engine, self)
+      @less.instance_eval { def less_engine; @less_engine; end }
     end
     
     def parse build = true, env = Node::Element.new
-      root = @parser.parse(self.prepare)
+      self.prepare
+      root = @parser.parse(@less)
       
       return root unless build
       
@@ -47,7 +53,11 @@ module Less
     end
     
     def prepare
-      @less.gsub(/\r\n/, "\n").gsub(/\t/, '  ')
+      @less.gsub!(/\r\n/, "\n")
+      @less.gsub!(/\t/, '  ')
     end
+    
+    # :nodoc:
+    attr_reader :options
   end
 end
